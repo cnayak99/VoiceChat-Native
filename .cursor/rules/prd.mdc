@@ -1,0 +1,143 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# 📄 AI Voice Assistant — Product Requirements Document (PRD)
+
+## 🧭 Goal
+
+Build a SwiftUI-based iOS app with a minimalistic UI that enables users to interact with ElevenLabs’ conversational AI using their voice. The interaction starts/stops via a single button.
+
+---
+
+## 🎯 Core Features
+
+1. **Single Call Button**
+
+   - Green with phone icon by default
+   - Turns red when active (i.e., streaming voice)
+   - Tap toggles call state
+
+2. **Microphone Permission**
+
+   - Ask for `AVAudioSession` and `AVCaptureDevice` permissions on first use
+   - Show user-friendly error if denied
+
+3. **Voice Streaming with ElevenLabs**
+
+   - Stream live voice to 11labs’ Conversational API
+   - Receive AI-generated voice response
+   - Play AI response using `AVPlayer`
+
+4. **Graceful Connect/Disconnect**
+
+   - On connect: prepare audio session, initialize stream
+   - On disconnect: terminate connection, clean up resources
+
+5. **Minimal UI**
+
+   - SwiftUI interface only
+   - No navigation, no other screens
+   - Responsive to device orientation and safe area
+
+---
+
+## 🧱 Project Structure
+
+```
+AIVoiceAssistant/
+│
+├── AIVoiceAssistantApp.swift         # Entry point
+├── ContentView.swift                 # UI with call button
+│
+├── Services/
+│   ├── MicPermissionService.swift    # Request/check mic access
+│   ├── ElevenLabsService.swift       # Handles API streaming logic
+│   └── AudioPlaybackService.swift    # Plays AI voice output
+│
+├── Models/
+│   └── CallState.swift               # Enum: .disconnected, .connecting, .connected
+│
+├── Utils/
+│   └── AudioUtils.swift              # Helpers for audio session setup
+│
+├── Assets.xcassets/                 # App icon, colors, etc.
+└── Info.plist                       # Permissions, networking capabilities
+```
+
+---
+
+## 🔐 Permissions
+
+- `NSMicrophoneUsageDescription`: "We need access to your microphone for live AI voice interaction."
+
+---
+
+## 📡 API Integration (ElevenLabs Conversational API)
+
+- Auth: API Key via `Authorization: Bearer`
+- Input: Streaming PCM audio (or appropriate encoding)
+- Output: Streaming audio (e.g., Opus, MP3) or JSON chunks
+- Handle reconnection, errors, and timeout gracefully
+- Provide silence detection or manual stop
+
+---
+
+## 🔄 State Management
+
+Use `@State` and `@ObservedObject` for:
+
+- Current `CallState`
+- Button color/icon toggle
+- Audio input/output state
+
+---
+
+## 📱 UI Interaction Flow
+
+| Action       | Visual Change | Behind the Scenes                       |
+| ------------ | ------------- | --------------------------------------- |
+| App Launch   | Green button  | Wait for mic permission                 |
+| Button Press | Red button    | Connect to ElevenLabs API, start stream |
+| Speaking     | Red button    | Stream mic input                        |
+| AI Responds  | Red button    | Play received voice                     |
+| Button Press | Green button  | Disconnect API stream, stop mic/audio   |
+
+---
+
+## 🧩 Dependencies
+
+- SwiftUI
+- AVFoundation (for mic + playback)
+- URLSession WebSockets or async HTTP stream (for 11labs)
+- Combine (optional for reactive updates)
+
+---
+
+## 🧪 Edge Cases to Handle
+
+- Mic permission denied
+- API timeout or 429 throttling
+- User presses button mid-response
+- No internet connection
+
+---
+
+## 🛠 Build Constraints
+
+- SwiftUI only (no UIKit)
+- No 3rd-party dependencies unless absolutely needed
+- Buildable and testable in Xcode simulator (no real mic streaming there — fallback for testing)
+
+---
+
+## ✅ Definition of Done
+
+- App builds and runs in simulator
+- Button UI reacts to call state
+- Mic permission flow works
+- Connects and disconnects API without crash
+- Sends user voice and plays back AI audio
+- Handles common errors gracefully
+
