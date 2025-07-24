@@ -8,272 +8,186 @@
 import SwiftUI
 
 struct ContentView: View {
-    @State private var callState: CallState = .disconnected
-    @State private var isAnimating = false
-    @State private var showingPermissionAlert = false
-    @State private var showingErrorAlert = false
-    
-    @StateObject private var micPermissionService = MicPermissionService()
-    @StateObject private var audioPlaybackService = AudioPlaybackService()
-    @StateObject private var elevenLabsService: ElevenLabsService
-    
-    init() {
-        let audioService = AudioPlaybackService()
-        _audioPlaybackService = StateObject(wrappedValue: audioService)
-        _elevenLabsService = StateObject(wrappedValue: ElevenLabsService(audioPlaybackService: audioService))
-    }
+    @StateObject private var conversationService = ElevenLabsConversationService()
+    @State private var animationActive = false
     
     var body: some View {
-        ZStack {
-            // Background gradient for a modern look
-            LinearGradient(
-                gradient: Gradient(colors: [Color(.systemBackground), Color(.secondarySystemBackground)]),
-                startPoint: .top,
-                endPoint: .bottom
-            )
-            .ignoresSafeArea()
+        VStack(spacing: 40) {
+            Spacer()
             
-            VStack(spacing: 40) {
-                Spacer()
+            // Title
+            Text("Voice Assistant")
+                .font(.largeTitle)
+                .fontWeight(.bold)
+                .foregroundColor(.primary)
+            
+            Spacer()
+            
+            // Status - only show when connecting or connected
+            if isConnecting || isConnected {
+                Text(statusText)
+                    .font(.title3)
+                    .foregroundColor(statusColor)
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 8)
+                    .background(Color(.systemGray6))
+                    .cornerRadius(20)
+            }
+            
+            Spacer()
+            
+            // Call Button
+            Button(action: {
+                Task {
+                    await toggleCall()
+                }
+            }) {
+                Image(systemName: buttonIcon)
+                    .font(.system(size: 50))
+                    .foregroundColor(.white)
+            }
+            .frame(width: 120, height: 120)
+            .background(buttonColor)
+            .clipShape(Circle())
+            .scaleEffect(buttonScale)
+            .animation(.easeInOut(duration: 0.2), value: buttonScale)
+            .animation(.easeInOut(duration: 0.3), value: buttonColor)
+            .disabled(isButtonDisabled)
+            .background(
+                // Pulsing animation circle behind the button
+                Group {
+                    if isConnecting {
+                        Circle()
+                            .fill(buttonColor.opacity(0.2))
+                            .frame(width: 120, height: 120)
+                            .scaleEffect(animationActive ? 1.6 : 1.0)
+                            .opacity(animationActive ? 0.0 : 0.4)
+                            .animation(
+                                .easeOut(duration: 1.0)
+                                .repeatForever(autoreverses: false),
+                                value: animationActive
+                            )
+                    }
+                }
+            )
+            .onChange(of: isConnecting) { _, connecting in
+                if connecting {
+                    animationActive = true
+                } else {
+                    animationActive = false
+                }
+            }
+            
+            Spacer()
+            
+            // Button Status Text
+            VStack(spacing: 8) {
+                Text(buttonStatusText)
+                    .font(.title3)
+                    .foregroundColor(.primary)
                 
-                // Title
-                VStack(spacing: 8) {
-                    Text("Voice Assistant")
-                        .font(.largeTitle)
-                        .fontWeight(.bold)
-                        .foregroundColor(.primary)
-                    
-                    Text(statusText)
+                // Secondary instruction text for connected state
+                if isConnected {
+                    Text("Speak naturally — I'm listening")
                         .font(.subheadline)
                         .foregroundColor(.secondary)
-                        .animation(.easeInOut(duration: 0.3), value: callState)
-                }
-                
-                Spacer()
-                
-                // Call Button
-                Button(action: toggleCall) {
-                    ZStack {
-                        // Button background circle
-                        Circle()
-                            .fill(buttonColor)
-                            .frame(width: 120, height: 120)
-                            .shadow(color: buttonColor.opacity(0.3), radius: 20, x: 0, y: 8)
-                            .scaleEffect(isAnimating ? 1.05 : 1.0)
-                        
-                        // Phone icon with recording indicator
-                        VStack {
-                            Image(systemName: phoneIconName)
-                                .font(.system(size: 40, weight: .medium))
-                                .foregroundColor(.white)
-                                .rotationEffect(.degrees(isAnimating ? 5 : 0))
-                            
-                            if elevenLabsService.isRecording {
-                                HStack(spacing: 3) {
-                                    ForEach(0..<3) { index in
-                                        Circle()
-                                            .fill(Color.white)
-                                            .frame(width: 4, height: 4)
-                                            .scaleEffect(recordingAnimationScale(for: index))
-                                    }
-                                }
-                                .padding(.top, 8)
-                            }
-                        }
-                    }
-                }
-                .buttonStyle(CallButtonStyle())
-                .disabled(callState == .connecting)
-                
-                Spacer()
-                
-                // Instructions
-                VStack(spacing: 4) {
-                    Text(instructionText)
-                        .font(.body)
-                        .foregroundColor(.secondary)
-                        .multilineTextAlignment(.center)
-                        .animation(.easeInOut(duration: 0.3), value: callState)
-                    
-                    if let errorMessage = elevenLabsService.errorMessage {
-                        Text(errorMessage)
-                            .font(.caption)
-                            .foregroundColor(.red)
-                            .padding(.top, 4)
-                    }
-                }
-                .padding(.horizontal, 40)
-                
-                Spacer()
-            }
-        }
-        .animation(.spring(response: 0.6, dampingFraction: 0.8), value: callState)
-        .alert("Microphone Permission Required", isPresented: $showingPermissionAlert) {
-            Button("Settings") {
-                if let settingsURL = URL(string: UIApplication.openSettingsURLString) {
-                    UIApplication.shared.open(settingsURL)
                 }
             }
-            Button("Cancel", role: .cancel) { }
-        } message: {
-            Text("Voice Assistant needs microphone access to work. Please enable it in Settings.")
+            
+            Spacer()
+            Spacer()
         }
-        .alert("Connection Error", isPresented: $showingErrorAlert) {
-            Button("OK", role: .cancel) { }
-        } message: {
-            Text(elevenLabsService.errorMessage ?? "An unknown error occurred")
-        }
-        .onChange(of: elevenLabsService.errorMessage) { _, newValue in
-            if newValue != nil {
-                showingErrorAlert = true
-            }
-        }
-        .onChange(of: elevenLabsService.isConnected) { _, isConnected in
-            if isConnected {
-                callState = .connected
-            } else if callState == .connected {
-                callState = .disconnected
-            }
-        }
-        .onAppear {
-            micPermissionService.checkPermissionStatus()
+        .padding()
+        .background(Color(.systemBackground))
+    }
+    
+    // MARK: - Computed Properties
+    
+    private var isConnecting: Bool {
+        conversationService.status == "connecting"
+    }
+    
+    private var isConnected: Bool {
+        conversationService.isConnected
+    }
+    
+    private var isButtonDisabled: Bool {
+        false
+    }
+    
+    private var buttonIcon: String {
+        if isConnected {
+            return "phone.down.fill"
+        } else {
+            return "phone.fill"
         }
     }
     
     private var buttonColor: Color {
-        switch callState {
-        case .disconnected:
-            return .green
-        case .connecting:
-            return .orange
-        case .connected:
+        if isConnected {
             return .red
+        } else if isConnecting {
+            return .yellow
+        } else {
+            return .green
         }
     }
     
-    private var phoneIconName: String {
-        switch callState {
-        case .disconnected:
-            return "phone.fill"
-        case .connecting:
-            return "phone.connection"
-        case .connected:
-            return "phone.fill"
+    private var buttonScale: CGFloat {
+        isConnecting ? 0.95 : 1.0
+    }
+    
+    private var buttonStatusText: String {
+        if isConnected {
+            return "Tap to end call"
+        } else if isConnecting {
+            return "Connecting..."
+        } else {
+            return "Tap to start call"
+        }
+    }
+    
+    private var statusColor: Color {
+        switch conversationService.mode {
+        case "listening":
+            return .green
+        case "speaking":
+            return .blue
+        default:
+            return .secondary
         }
     }
     
     private var statusText: String {
-        switch callState {
-        case .disconnected:
-            return elevenLabsService.errorMessage != nil ? "Error - Check configuration" : "Ready to talk"
-        case .connecting:
+        if isConnected {
+            switch conversationService.mode {
+            case "listening":
+                return "Listening..."
+            case "speaking":
+                return "Speaking..."
+            default:
+                return "Connected"
+            }
+        } else if isConnecting {
             return "Connecting..."
-        case .connected:
-            return elevenLabsService.isRecording ? "Listening..." : "Connected"
+        } else {
+            return "Tap to start conversation"
         }
     }
     
-    private var instructionText: String {
-        switch callState {
-        case .disconnected:
-            return "Tap the button to start your conversation with AI"
-        case .connecting:
-            return "Please wait while we connect to ElevenLabs"
-        case .connected:
-            return "Speak now! Tap again to end the conversation"
-        }
-    }
+    // MARK: - Actions
     
-    private func recordingAnimationScale(for index: Int) -> CGFloat {
-        let baseScale: CGFloat = 0.5
-        let maxScale: CGFloat = 1.5
-        let animationOffset = Double(index) * 0.2
-        
-        return baseScale + (maxScale - baseScale) * CGFloat(abs(sin(Date().timeIntervalSince1970 * 3 + animationOffset)))
-    }
-    
-    private func toggleCall() {
-        withAnimation(.spring(response: 0.5, dampingFraction: 0.7)) {
-            // Animate the button press
-            isAnimating = true
+    private func toggleCall() async {
+        if isConnected {
+            // End the call and disconnect
+            print("🔴 User tapped to end call")
+            await conversationService.disconnect()
+        } else if !isConnecting {
+            // Start the call
+            print("🟢 User tapped to start call")
+            await conversationService.connect()
         }
-        
-        // Reset animation after a short delay
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-            withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-                isAnimating = false
-            }
-        }
-        
-        // Handle state changes
-        Task {
-            switch callState {
-            case .disconnected:
-                await startCall()
-                
-            case .connected:
-                await endCall()
-                
-            case .connecting:
-                // Prevent multiple taps during connection
-                break
-            }
-        }
-    }
-    
-    private func startCall() async {
-        // Check microphone permission first
-        let hasPermission = await micPermissionService.requestMicrophonePermission()
-        
-        guard hasPermission else {
-            showingPermissionAlert = true
-            return
-        }
-        
-        // Start connecting
-        callState = .connecting
-        
-        // Setup audio session
-        do {
-            try AudioUtils.setupAudioSession()
-        } catch {
-            print("Failed to setup audio session: \(error)")
-            elevenLabsService.errorMessage = "Failed to setup audio session"
-            callState = .disconnected
-            return
-        }
-        
-        // Connect to ElevenLabs
-        await elevenLabsService.connect()
-        
-        // If connection failed, reset state
-        if !elevenLabsService.isConnected {
-            withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
-                callState = .disconnected
-            }
-        }
-    }
-    
-    private func endCall() async {
-        // Disconnect from ElevenLabs
-        await elevenLabsService.disconnect()
-        
-        // Deactivate audio session
-        AudioUtils.deactivateAudioSession()
-        
-        // Update UI state
-        withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
-            callState = .disconnected
-        }
-    }
-}
-
-// Custom button style for the call button
-struct CallButtonStyle: ButtonStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .scaleEffect(configuration.isPressed ? 0.95 : 1.0)
-            .animation(.easeInOut(duration: 0.1), value: configuration.isPressed)
+        // Do nothing if already connecting
     }
 }
 

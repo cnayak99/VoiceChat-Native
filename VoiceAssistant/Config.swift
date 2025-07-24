@@ -8,14 +8,14 @@
 import Foundation
 
 struct Config {
-    // MARK: - ElevenLabs Configurationß
+    // MARK: - ElevenLabs Configuration
     // To get your API key and Agent ID:
     // 1. Sign up at https://elevenlabs.io
     // 2. Go to your profile to get your API key
     // 3. Create a conversational AI agent to get the Agent ID
     
-    static let elevenLabsAPIKey = "sk_a83ce165fbd64b6844e83112fc768f7eae589580f13482a6"
-    static let elevenLabsAgentID = "agent_01jz5bkwcpf01rtev087sv328v"
+    static let elevenLabsAPIKey = "sk_40f1398d2321176618f2cca7d6635dd1e74485d8c9968ba4"
+    static let elevenLabsAgentID = "agent_7301k0wpv6g7ffhrf1fwv7chnz2y"
     
     // MARK: - Audio Configuration
     static let audioSampleRate: Double = 16000 // 16kHz for ElevenLabs

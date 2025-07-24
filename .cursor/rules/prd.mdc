@@ -1,7 +1,5 @@
 ---
-description: 
-globs: 
-alwaysApply: false
+alwaysApply: true
 ---
 # 📄 AI Voice Assistant — Product Requirements Document (PRD)
 

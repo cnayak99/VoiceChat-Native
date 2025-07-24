@@ -6,6 +6,11 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		EC753BEA2E31ADDF00EDF7F4 /* ElevenLabsSDK in Frameworks */ = {isa = PBXBuildFile; productRef = EC753BE92E31ADDF00EDF7F4 /* ElevenLabsSDK */; };
+		ECD99F722E31A5AA0002B407 /* ElevenLabs in Frameworks */ = {isa = PBXBuildFile; productRef = ECD99F712E31A5AA0002B407 /* ElevenLabs */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		B90A0B222E2EAA7100A8D7BE /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -52,6 +57,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				EC753BEA2E31ADDF00EDF7F4 /* ElevenLabsSDK in Frameworks */,
+				ECD99F722E31A5AA0002B407 /* ElevenLabs in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -112,6 +119,8 @@
 			);
 			name = VoiceAssistant;
 			packageProductDependencies = (
+				ECD99F712E31A5AA0002B407 /* ElevenLabs */,
+				EC753BE92E31ADDF00EDF7F4 /* ElevenLabsSDK */,
 			);
 			productName = VoiceAssistant;
 			productReference = B90A0B122E2EAA7000A8D7BE /* VoiceAssistant.app */;
@@ -195,6 +204,10 @@
 			);
 			mainGroup = B90A0B092E2EAA7000A8D7BE;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				ECD99F702E31A5AA0002B407 /* XCRemoteSwiftPackageReference "ElevenLabsSwift" */,
+				EC753BE82E31ADDF00EDF7F4 /* XCRemoteSwiftPackageReference "elevenlabs-swift-sdk" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = B90A0B132E2EAA7000A8D7BE /* Products */;
 			projectDirPath = "";
@@ -397,7 +410,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = P75BZX2XSJ;
+				DEVELOPMENT_TEAM = 99BHWCPSQ6;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Voice Assistant needs access to your microphone for live AI voice interaction with ElevenLabs.";
@@ -429,7 +442,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = P75BZX2XSJ;
+				DEVELOPMENT_TEAM = 99BHWCPSQ6;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Voice Assistant needs access to your microphone for live AI voice interaction with ElevenLabs.";
@@ -566,6 +579,38 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		EC753BE82E31ADDF00EDF7F4 /* XCRemoteSwiftPackageReference "elevenlabs-swift-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/elevenlabs/elevenlabs-swift-sdk";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.0.0;
+			};
+		};
+		ECD99F702E31A5AA0002B407 /* XCRemoteSwiftPackageReference "ElevenLabsSwift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/elevenlabs/ElevenLabsSwift";
+			requirement = {
+				branch = main;
+				kind = branch;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		EC753BE92E31ADDF00EDF7F4 /* ElevenLabsSDK */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = EC753BE82E31ADDF00EDF7F4 /* XCRemoteSwiftPackageReference "elevenlabs-swift-sdk" */;
+			productName = ElevenLabsSDK;
+		};
+		ECD99F712E31A5AA0002B407 /* ElevenLabs */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = ECD99F702E31A5AA0002B407 /* XCRemoteSwiftPackageReference "ElevenLabsSwift" */;
+			productName = ElevenLabs;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = B90A0B0A2E2EAA7000A8D7BE /* Project object */;
 }
